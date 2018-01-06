@@ -1,27 +1,30 @@
-module ArchitectSolver where
+module Solver where
 
 import Model
 import Utils
 
-solve :: ArchitectBoard -> Board -- TODO - or boundedboard???
 
 board =  ArchitectBoard -- test TODO - delete
 	(BoundedBoard 
 	[
-		[Empty, House, Empty, Empty, Empty, Empty],
-		[Empty, Empty, Empty, Empty, Empty, Empty],
-		[Empty, Empty, Empty, Empty, Empty, Empty],
-		[Empty, Empty, House, Empty, House, Empty],
-		[House, Empty, Empty, Empty, House, Empty],
-		[Empty, Empty, House, Empty, House, House]
+		[Unchecked, House, Unchecked, Unchecked, Unchecked, Unchecked],
+		[Unchecked, Unchecked, Unchecked, Unchecked, Unchecked, Unchecked],
+		[Unchecked, Unchecked, Unchecked, Unchecked, Unchecked, Unchecked],
+		[Unchecked, Unchecked, House, Unchecked, House, Unchecked],
+		[House, Unchecked, Unchecked, Unchecked, House, Unchecked],
+		[Unchecked, Unchecked, House, Unchecked, House, House]
 	] 6 6)
 	[1, 0, 2, 1, 2, 1]
-	[1, 1, 2, 1, 1, 1] 
+	[1, 1, 2, 1, 1, 1]
+	
+
+solve :: ArchitectBoard -> Board -- TODO - or boundedboard??? 
 
 solve architectBoard = do
 	let houses = getHouses (getBoard architectBoard)
-	let tempArchitectBoard = setHouseHas1EmptyNeighbour architectBoard houses
-	getBoard {--(excludeFields--} tempArchitectBoard -- TODO
+	let newBoardHouses = setHouseHas1UncheckedNeighbour architectBoard houses
+	let newHouses = deleteElems houses (snd newBoardHouses)
+	getBoard  (excludeFields (fst newBoardHouses))
 	
 	
 	
@@ -32,100 +35,71 @@ solve architectBoard = do
 
 excludeFields :: ArchitectBoard -> ArchitectBoard
 
-excludeFields (ArchitectBoard (BoundedBoard board rowNb columnNb) rowDscNb cloumnDscNb) = ArchitectBoard 
+excludeFields (ArchitectBoard (BoundedBoard board rowNb columnNb) rowDscNb columnDscNb) = ArchitectBoard 
 	(BoundedBoard
 		[	
-			[
-				if field == House || neighbourEq (BoundedBoard board rowNb columnNb) j i House == True then  -- TODO - zrownoleglic co sie da!!!!
-					field
+			[	
+				if field == Unchecked then
+					if jDscNb == 0 || iDscNb == 0 then
+						None
+					else
+						if neighbourEq (BoundedBoard board rowNb columnNb) j i House == True then
+							field
+						else 
+							None
 				else
-					None
-				| i <- [0..(columnNb - 1)], let field = board !! j !! i
+					field 		
+				| i <- [0..(columnNb - 1)], let field = board !! j !! i, let iDscNb = columnDscNb !! i
 			] 
-			| j <- [0..(rowNb - 1)]
+			| j <- [0..(rowNb - 1)], let jDscNb = rowDscNb !! j
 		] 
 		rowNb columnNb
 	) 
-	rowDscNb cloumnDscNb
+	rowDscNb columnDscNb
 	
 	
-setHouseHas1EmptyNeighbour :: ArchitectBoard -> HousesList -> ArchitectBoard
+setHouseHas1UncheckedNeighbour :: ArchitectBoard -> HousesList -> (ArchitectBoard, HousesList) 
 
-setHouseHas1EmptyNeighbour architectBoard [] = architectBoard
+setHouseHas1UncheckedNeighbour architectBoard [] = (architectBoard, [])
 
-setHouseHas1EmptyNeighbour architectBoard (headHouse:tailHouses) = do
-	let houseNeighbours = getEmptyNeighbours headHouse (getBoundedBoard architectBoard)
+setHouseHas1UncheckedNeighbour architectBoard (headHouse:tailHouses) = do
+	let houseNeighbours = getUncheckedNeighbours headHouse (getBoundedBoard architectBoard)
 	if length houseNeighbours == 1 then do
-		let newArchitectBoard = setGasTank architectBoard headHouse (head houseNeighbours)  
-		setHouseHas1EmptyNeighbour newArchitectBoard tailHouses
+		let tempArchBoard = setGasTank architectBoard headHouse (head houseNeighbours)
+		let tempResult = setHouseHas1UncheckedNeighbour tempArchBoard tailHouses
+		(fst tempResult, [headHouse] ++ (snd tempResult))
 	else
-		setHouseHas1EmptyNeighbour architectBoard tailHouses
+		setHouseHas1UncheckedNeighbour architectBoard tailHouses
 		
 		
-getEmptyNeighbours :: (Int, Int) -> BoundedBoard -> [(Int, Int)]
+getUncheckedNeighbours :: (Int, Int) -> BoundedBoard -> [(Int, Int)]
 
-getEmptyNeighbours (rowIndex, columnIndex) boundedBoard = 		-- TODO - refactor??
-	if fieldEq boundedBoard (rowIndex - 1) columnIndex Empty == TriTrue then
-		[((rowIndex - 1), columnIndex)]
-	else 
-		[]
-		
+getUncheckedNeighbours (rowIndex, columnIndex) boundedBoard = 
+	fieldEqAsList boundedBoard (rowIndex - 1, columnIndex) Unchecked 
 	++
-		
-	if fieldEq boundedBoard rowIndex (columnIndex - 1) Empty == TriTrue then
-		[(rowIndex, (columnIndex - 1))]
-	else 
-		[]
-		
+	fieldEqAsList boundedBoard (rowIndex + 1, columnIndex) Unchecked 
 	++
-		
-	if fieldEq boundedBoard (rowIndex + 1) columnIndex Empty == TriTrue then
-		[((rowIndex + 1), columnIndex)]
-	else 
-		[]
-		
+	fieldEqAsList boundedBoard (rowIndex, columnIndex - 1) Unchecked
 	++
-	
-	if fieldEq boundedBoard rowIndex (columnIndex + 1) Empty == TriTrue then
-		[(rowIndex, (columnIndex + 1))]
-	else 
-		[]
+	fieldEqAsList boundedBoard (rowIndex, columnIndex + 1) Unchecked
 		
 		
-getCornerEmptyNeighbours :: (Int, Int) -> BoundedBoard -> [(Int, Int)]
+getCornerUncheckedNeighbours :: (Int, Int) -> BoundedBoard -> [(Int, Int)]
 
-getCornerEmptyNeighbours (rowIndex, columnIndex) boundedBoard = 		-- TODO - refactor??
-	if fieldEq boundedBoard (rowIndex - 1) (columnIndex - 1) Empty == TriTrue then
-		[((rowIndex - 1), (columnIndex - 1))]
-	else 
-		[]
-		
+getCornerUncheckedNeighbours (rowIndex, columnIndex) boundedBoard = 
+	fieldEqAsList boundedBoard (rowIndex - 1, columnIndex - 1) Unchecked 
 	++
-		
-	if fieldEq boundedBoard (rowIndex - 1) (columnIndex + 1) Empty == TriTrue then
-		[((rowIndex - 1), (columnIndex + 1))]
-	else 
-		[]
-		
+	fieldEqAsList boundedBoard (rowIndex - 1, columnIndex + 1) Unchecked 
 	++
-		
-	if fieldEq boundedBoard (rowIndex + 1) (columnIndex - 1) Empty == TriTrue then
-		[((rowIndex + 1), (columnIndex - 1))]
-	else 
-		[]
-		
+	fieldEqAsList boundedBoard (rowIndex + 1, columnIndex - 1) Unchecked
 	++
-	
-	if fieldEq boundedBoard (rowIndex + 1) (columnIndex + 1) Empty == TriTrue then
-		[((rowIndex + 1), (columnIndex + 1))]
-	else 
-		[]
+	fieldEqAsList boundedBoard (rowIndex + 1, columnIndex + 1) Unchecked
 		
 		
 setGasTank :: ArchitectBoard -> (Int, Int) -> (Int, Int) -> ArchitectBoard
 
 setGasTank (ArchitectBoard boundedBoard rowDscNb cloumnDscNb) (houseRow, houseCol) (gasRow, gasCol) = 
-	(ArchitectBoard
+	ArchitectBoard
 		(BoundedBoard 
 			(setGasTankOnBoard boundedBoard (houseRow, houseCol) (gasRow, gasCol))
 			(getRowNb boundedBoard)
@@ -133,20 +107,20 @@ setGasTank (ArchitectBoard boundedBoard rowDscNb cloumnDscNb) (houseRow, houseCo
 		)
 		(decNthElem rowDscNb gasRow)
 		(decNthElem cloumnDscNb gasCol)
-	)
 	
 	
-setGasTankOnBoard :: BoundedBoard -> (Int, Int) -> (Int, Int) -> Board -- TODO - or boundedBoard???
+setGasTankOnBoard :: BoundedBoard -> (Int, Int) -> (Int, Int) -> Board
 
 setGasTankOnBoard boundedBoard (houseRow, houseCol) (gasRow, gasCol) = do
 	let tempBoard = setNthMthTwoDim (getUnboundedBoard boundedBoard) (GasTank (houseRow, houseCol)) gasRow gasCol
 	
-	let emptyNeighbours = 
-		(getEmptyNeighbours (gasRow, gasCol) boundedBoard) 
+	let uncheckedNeighbours = 
+		(getUncheckedNeighbours (gasRow, gasCol) boundedBoard) 
 		++
-		(getCornerEmptyNeighbours (gasRow, gasCol) boundedBoard)
-	
-	setFieldsWhen boundedBoard (\x -> x == Empty) None emptyNeighbours
+		(getCornerUncheckedNeighbours (gasRow, gasCol) boundedBoard)
+
+	let newBoundedBoard = BoundedBoard tempBoard (getRowNb boundedBoard) (getColumnNb boundedBoard)
+	setFieldsWhen newBoundedBoard (\x -> x == Unchecked) None uncheckedNeighbours
 	
 	
 	

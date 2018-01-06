@@ -4,7 +4,7 @@ import Utils
 
 data TriLogic = TriTrue | TriFalse | Invalid deriving (Enum, Eq)
 
-data FieldType = House | GasTank (Int, Int) | None | Empty deriving (Show, Eq)
+data FieldType = House | GasTank (Int, Int) | None | Unchecked deriving (Show, Eq)
 
 type Row = [FieldType]
 
@@ -49,26 +49,56 @@ getColumnNb :: BoundedBoard -> Int
 getColumnNb (BoundedBoard board rowNb columnNb) = columnNb
 
 
-showRow :: Row -> String
+rowToString :: Row -> String
 
-showRow [] = ""
+rowToString [] = ""
 
-showRow (head:tail) = (show head) ++ "\t" ++ showRow tail 
+rowToString (head:tail) = (show head) ++ "\t" ++ rowToString tail 
 
 
-showBoard :: Board -> String
+boardToString :: Board -> String
 
-showBoard [] = ""
+boardToString [] = ""
 
-showBoard (headRow:tailRows) = 
-	showRow headRow ++ 
-	"\n"
-	++ showBoard tailRows
+boardToString (headRow:tailRows) = 
+	rowToString headRow ++ 
+	"\n" ++
+	boardToString tailRows
 															
 
 printBoard :: Board -> IO()															
 															
-printBoard board = putStr (showBoard board)		
+printBoard board = putStr (boardToString board)		
+
+
+prettyRowToString :: Row -> String
+
+prettyRowToString [] = ""
+
+prettyRowToString (head:tail) = case head of 
+	House -> "House         \t" 
+	None -> "None          \t"
+	Unchecked -> "Unchecked     \t"  
+	_ -> show head ++ "\t"
+
+	++
+
+	prettyRowToString tail
+
+
+prettyBoardToString :: Board -> String
+
+prettyBoardToString [] = ""
+
+prettyBoardToString (head:tail) = 
+	prettyRowToString head ++
+	"\n" ++
+	prettyBoardToString tail
+
+
+prettyPrintBoard :: Board -> IO()
+
+prettyPrintBoard board = putStr (prettyBoardToString board)
 
 
 fieldEq :: BoundedBoard -> Int -> Int -> FieldType -> TriLogic		-- TODO - trilogic (really needed???)
@@ -81,6 +111,15 @@ fieldEq (BoundedBoard board columnNb rowNb) rowIndex columnIndex field =
 			TriFalse
 	else
 		Invalid
+
+
+fieldEqAsList :: BoundedBoard -> (Int, Int) -> FieldType -> [(Int, Int)]
+
+fieldEqAsList boundedBoard (rowIndex, columnIndex) field = 
+	if fieldEq boundedBoard rowIndex columnIndex field == TriTrue then
+		[(rowIndex, columnIndex)]
+	else 
+		[]
 													
 													
 neighbourEq :: BoundedBoard -> Int -> Int -> FieldType -> Bool

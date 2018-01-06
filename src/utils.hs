@@ -47,6 +47,18 @@ setNthMthTwoDim twoDimList newElem row column =
 		setNth (twoDimList !! row) newElem column 
 			: 
 		drop (row + 1) twoDimList
+
+
+-- use when second argument is much longer than first
+deleteElems ::  Eq a => [a] -> [a] -> [a]
+
+deletedElems [] deleted = []
+
+deleteElems (head:tail) deleted =
+	if head `elem` deleted then
+		deleteElems tail deleted
+	else 
+		head : deleteElems tail deleted
 		
 	
 
