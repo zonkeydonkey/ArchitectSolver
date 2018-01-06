@@ -4,4 +4,7 @@ import Solver
 import Model
 
 main :: IO ()
-main = putStrLn "Hello, Haskell!"
+main = do
+	putStrLn "Hello, Haskell!"
+	temp <- getLine
+	putStrLn temp

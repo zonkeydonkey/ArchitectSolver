@@ -2,15 +2,17 @@ module Model where
 
 import Utils
 
-data TriLogic = TriTrue | TriFalse | Invalid deriving (Enum, Eq)
+data TriLogic = True | False | Invalid deriving (Enum, Eq)
 
-data FieldType = House | GasTank (Int, Int) | None | Unchecked deriving (Show, Eq)
+type Coords = (Int, Int)
+
+type CoordsList = [Coords]
+
+data FieldType = House | GasTank Coords | None | Unchecked deriving (Show, Eq)
 
 type Row = [FieldType]
 
 type DescNumbers = [Int]
-
-type HousesList = [(Int, Int)]
 
 type Board = [Row]
 
@@ -34,7 +36,7 @@ getBoundedBoard :: ArchitectBoard -> BoundedBoard
 getBoundedBoard (ArchitectBoard boundedBoard rowDscNb columnDscNb) = boundedBoard
 		
 		
-getHouses :: Board -> HousesList
+getHouses :: Board -> CoordsList
 
 getHouses board = findIndicesTwoDim (\x -> x == House) board
 
@@ -101,22 +103,22 @@ prettyPrintBoard :: Board -> IO()
 prettyPrintBoard board = putStr (prettyBoardToString board)
 
 
-fieldEq :: BoundedBoard -> Int -> Int -> FieldType -> TriLogic		-- TODO - trilogic (really needed???)
+fieldEq :: BoundedBoard -> Coords -> FieldType -> TriLogic
 
-fieldEq (BoundedBoard board columnNb rowNb) rowIndex columnIndex field = 
+fieldEq (BoundedBoard board rowNb columnNb) (rowIndex, columnIndex) field = 
 	if rowIndex > -1 && rowIndex < rowNb && columnIndex > -1 && columnIndex < columnNb then
 		if board !! rowIndex !! columnIndex == field then
-			TriTrue
+			Model.True
 		else
-			TriFalse
+			Model.False
 	else
 		Invalid
 
 
-fieldEqAsList :: BoundedBoard -> (Int, Int) -> FieldType -> [(Int, Int)]
+fieldEqAsList :: BoundedBoard -> Coords -> FieldType -> CoordsList
 
 fieldEqAsList boundedBoard (rowIndex, columnIndex) field = 
-	if fieldEq boundedBoard rowIndex columnIndex field == TriTrue then
+	if fieldEq boundedBoard (rowIndex, columnIndex) field == Model.True then
 		[(rowIndex, columnIndex)]
 	else 
 		[]
@@ -125,13 +127,13 @@ fieldEqAsList boundedBoard (rowIndex, columnIndex) field =
 neighbourEq :: BoundedBoard -> Int -> Int -> FieldType -> Bool
 
 neighbourEq board rowIndex columnIndex field = 
-	(fieldEq board (rowIndex - 1) columnIndex field) == TriTrue ||  
-	(fieldEq board rowIndex (columnIndex - 1) field) == TriTrue ||
-	(fieldEq board (rowIndex + 1) columnIndex field) == TriTrue ||
-	(fieldEq board rowIndex (columnIndex + 1) field) == TriTrue		
+	(fieldEq board ((rowIndex - 1), columnIndex) field) == Model.True ||  
+	(fieldEq board (rowIndex, (columnIndex - 1)) field) == Model.True ||
+	(fieldEq board ((rowIndex + 1), columnIndex) field) == Model.True ||
+	(fieldEq board (rowIndex, (columnIndex + 1)) field) == Model.True		
 
 
-setFieldsWhen :: BoundedBoard -> (FieldType -> Bool) -> FieldType -> [(Int, Int)] -> Board
+setFieldsWhen :: BoundedBoard -> (FieldType -> Bool) -> FieldType -> CoordsList -> Board
 
 setFieldsWhen (BoundedBoard board rowNb columnNb) predicate newType indices = 
 	[

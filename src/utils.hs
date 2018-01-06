@@ -52,13 +52,30 @@ setNthMthTwoDim twoDimList newElem row column =
 -- use when second argument is much longer than first
 deleteElems ::  Eq a => [a] -> [a] -> [a]
 
-deletedElems [] deleted = []
+deleteElems list [] = list
+
+deleteElems [] deleted = []
 
 deleteElems (head:tail) deleted =
 	if head `elem` deleted then
 		deleteElems tail deleted
 	else 
-		head : deleteElems tail deleted
+		head : (deleteElems tail deleted)
+
+
+setNthMthTwoDimWhen :: (a -> Bool) -> [[a]] -> Int -> Int -> a -> [[a]]
+
+setNthMthTwoDimWhen predicate twoDimList rowNb columnNb newElem = 
+	[	
+		[	
+			if predicate currentElem then
+				newElem
+			else
+				currentElem
+		| i <- [0..(columnNb - 1)], let currentElem = twoDimList !! j !! i
+		] 
+		| j <- [0..(rowNb - 1)]
+	]
 		
 	
 
