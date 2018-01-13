@@ -73,34 +73,7 @@ printBoard :: Board -> IO()
 printBoard board = putStr (boardToString board)		
 
 
-prettyRowToString :: Row -> String
 
-prettyRowToString [] = ""
-
-prettyRowToString (head:tail) = case head of 
-	House -> "House         \t" 
-	None -> "None          \t"
-	Unchecked -> "Unchecked     \t"  
-	_ -> show head ++ "\t"
-
-	++
-
-	prettyRowToString tail
-
-
-prettyBoardToString :: Board -> String
-
-prettyBoardToString [] = ""
-
-prettyBoardToString (head:tail) = 
-	prettyRowToString head ++
-	"\n" ++
-	prettyBoardToString tail
-
-
-prettyPrintBoard :: Board -> IO()
-
-prettyPrintBoard board = putStr (prettyBoardToString board)
 
 
 fieldEq :: BoundedBoard -> Coords -> FieldType -> TriLogic
