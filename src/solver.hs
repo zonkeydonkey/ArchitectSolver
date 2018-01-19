@@ -3,55 +3,6 @@ module Solver where
 import Data.Maybe
 import Model
 import Utils
-
-
-board =  ArchitectBoard -- test TODO - delete
-	(BoundedBoard 
-	[
-		[Unchecked, House, Unchecked, Unchecked, Unchecked, Unchecked],
-		[Unchecked, Unchecked, Unchecked, Unchecked, Unchecked, Unchecked],
-		[Unchecked, Unchecked, Unchecked, Unchecked, Unchecked, Unchecked],
-		[Unchecked, Unchecked, House, Unchecked, House, Unchecked],
-		[House, Unchecked, Unchecked, Unchecked, House, Unchecked],
-		[Unchecked, Unchecked, House, Unchecked, Unchecked, House]
-	] 6 6)
-	[1, 0, 2, 1, 2, 1]
-	[1, 1, 2, 1, 1, 1]
-
-
-board2 =  ArchitectBoard -- test TODO - delete
-	(BoundedBoard 
-	[
-		[Unchecked, House, Unchecked, Unchecked, Unchecked],
-		[Unchecked, Unchecked, Unchecked, Unchecked, Unchecked],
-		[Unchecked, Unchecked, Unchecked, Unchecked, Unchecked],
-		[Unchecked, Unchecked, House, Unchecked, House],
-		[House, Unchecked, Unchecked, Unchecked, House]
-	] 5 5)
-	[1, 0, 2, 1, 2]
-	[1, 1, 2, 1, 1]
-
-
-board3 =  ArchitectBoard -- test TODO - delete
-	(BoundedBoard 
-	[
-		[Unchecked, House, Unchecked, Unchecked, Unchecked],
-		[Unchecked, Unchecked, Unchecked, Unchecked, Unchecked],
-		[Unchecked, Unchecked, Unchecked, Unchecked, House],
-		[Unchecked, Unchecked, Unchecked, Unchecked, Unchecked],
-		[House, Unchecked, Unchecked, Unchecked, House]
-	] 5 5)
-	[1, 0, 2, 1, 2]
-	[1, 1, 2, 1, 1]
-
-
-board1 =  ArchitectBoard -- test TODO - delete
-	(BoundedBoard 
-	[
-		[Unchecked, House, Unchecked]
-	] 1 3)
-	[1]
-	[0, 0, 1]
 	
 
 solve :: ArchitectBoard -> Maybe Board
@@ -189,7 +140,7 @@ setGasForNeighbours board (headNeighb:tailNeighbs) (headHouse:tailHouses) = do
 
 isBoardOK :: ArchitectBoard -> Bool
 
-isBoardOK (ArchitectBoard board rowDscNb columnDscNb) = -- TODO - some optimization
+isBoardOK (ArchitectBoard board rowDscNb columnDscNb) = 
 	all (\x -> x > -1) rowDscNb
 	&&
 	all (\x -> x > -1) columnDscNb 
